@@ -322,6 +322,30 @@ void sismemberCommand(redisClient *c) {
         addReply(c,shared.czero);
 }
 
+void saremembersCommand(redisClient *c) {
+    int i;
+    robj *set;
+
+    set = lookupKeyRead(c->db, c->argv[1]);
+    if (set != NULL && checkType(c, set, REDIS_SET)) {
+        return;
+    }
+
+    addReplyMultiBulkLen(c, c->argc - 2);
+    for (i = 2; i < c->argc; i++) {
+        if (set != NULL) {
+            c->argv[i] = tryObjectEncoding(c->argv[i]);
+            if (setTypeIsMember(set, c->argv[i])) {
+                addReply(c, shared.cone);
+            } else {
+                addReply(c, shared.czero);
+            }
+        } else {
+            addReply(c, shared.czero);
+        }
+    }
+}
+
 void scardCommand(redisClient *c) {
     robj *o;
 
